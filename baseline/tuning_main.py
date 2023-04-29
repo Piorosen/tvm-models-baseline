@@ -19,10 +19,10 @@ if __name__ == "__main__":
     parser.add_argument("--tuner", default="autotvm",
                         choices=["autotvm", "auto_scheduler"])
     parser.add_argument("--quantize", action="store_true")
-    parser.add_argument("--target", default="x86", choices=["x86", "arm"])
+    parser.add_argument("--target", default="arm", choices=["x86", "arm"])
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", default=9190, type=int)
-    parser.add_argument("--key", default="pixel4")
+    parser.add_argument("--key", default="rk3399")
     args = parser.parse_args()
 
     os.environ["TVM_NUM_THREADS"] = str(args.num_threads)
@@ -54,16 +54,17 @@ if __name__ == "__main__":
             runner = auto_scheduler.LocalRunner(
                 repeat=10, enable_cpu_cache_flush=True
             )
-    elif args.target == "arm":
-        target = "llvm -device=arm_cpu -mtriple=aarch64-linux-gnu -mattr=+v8.2a,+dotprod"
+    elif args.target == "arm": 
+        target = "llvm -device=arm_cpu -mtriple=aarch64-linux-gnu"
         if args.tuner == "autotvm":
             measure_option = autotvm.measure_option(
-                builder=autotvm.LocalBuilder(build_func="ndk", timeout=60),
+                # builder=autotvm.LocalBuilder(build_func="ndk", timeout=60),
+                builder=autotvm.LocalBuilder(build_func="default", timeout=60),
                 runner=autotvm.RPCRunner(
                     args.key, args.host, args.port)
             )
         elif args.tuner == "auto_scheduler":
-            builder = auto_scheduler.LocalBuilder(build_func="ndk", timeout=60)
+            builder = auto_scheduler.LocalBuilder(build_func="default", timeout=60)
             runner = auto_scheduler.RPCRunner(
                 args.key,
                 host=args.host,
