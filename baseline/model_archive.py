@@ -38,6 +38,10 @@ def alexnet():
     return alex
 
 MODEL_ARCHIVE = {
+    "resnet18": {
+        "model": resnet18,
+        "input": (torch.randn(1, 3, 224, 224),),
+    },
     "alexnet": {
         "model": alexnet,
         "input": (torch.randn(1, 3, 227, 227),),

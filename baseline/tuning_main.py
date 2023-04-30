@@ -8,14 +8,14 @@ import tvm
 from tvm import autotvm, auto_scheduler
 import tvm.relay
 
-from baseline.utils import quantize, tune_network, tune_network_auto_scheduler
-from baseline.model_archive import MODEL_ARCHIVE
+from utils import quantize, tune_network, tune_network_auto_scheduler
+from model_archive import MODEL_ARCHIVE
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("")
-    parser.add_argument("--model", default="resnet18")
-    parser.add_argument("--tuning-records", default="resnet18.json")
-    parser.add_argument("--num-threads", default=1, type=int)
+    parser.add_argument("--model", default="alexnet")
+    parser.add_argument("--tuning-records", default="alexnet.json")
+    parser.add_argument("--num-threads", default=8, type=int)
     parser.add_argument("--tuner", default="autotvm",
                         choices=["autotvm", "auto_scheduler"])
     parser.add_argument("--quantize", action="store_true")

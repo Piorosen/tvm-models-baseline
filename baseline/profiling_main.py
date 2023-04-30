@@ -9,22 +9,22 @@ from tvm import autotvm, testing, auto_scheduler
 from tvm.contrib import ndk, rpc, utils
 import tvm.contrib.debugger.debug_executor as debug_executor
 
-from baseline.utils import quantize
+from utils import quantize
 
-from baseline.model_archive import MODEL_ARCHIVE
+from model_archive import MODEL_ARCHIVE
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("")
-    parser.add_argument("--model", default="resnet18")
+    parser.add_argument("--model", default="alexnet")
     parser.add_argument("--tuner", default="autotvm",
                         choices=["autotvm", "auto_scheduler"])
-    parser.add_argument("--tuning-records", nargs='?')
+    parser.add_argument("--tuning-records", default='alexnet.json')
     parser.add_argument("--num-threads", default=1, type=int)
     parser.add_argument("--quantize", action="store_true")
-    parser.add_argument("--target", default="x86")
+    parser.add_argument("--target", default="arm")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", default=9190, type=int)
-    parser.add_argument("--key", default="pixel4")
+    parser.add_argument("--key", default="rk3399")
     parser.add_argument("--opt-level", default=3, type=int)
     args = parser.parse_args()
 
@@ -52,7 +52,7 @@ if __name__ == "__main__":
     if args.target == "x86":
         target = "llvm -mcpu=cascadelake"
     elif args.target == "arm":
-        target = "llvm -device=arm_cpu -mtriple=aarch64-linux-gnu -mattr=+v8.2a,+dotprod"
+        target = "llvm -device=arm_cpu -mtriple=aarch64-linux-gnu"
 
     def relay_build(use_auto_scheduler):
         with tvm.transform.PassContext(opt_level=args.opt_level, config={"relay.backend.use_auto_scheduler": use_auto_scheduler}):
@@ -72,10 +72,21 @@ if __name__ == "__main__":
         m = debug_executor.create(
             lib.get_graph_json(), lib.get_lib(), ctx)
     elif args.target == "arm":
-        libname = "model.so"
+        ndk = False
+        libname = ""
         temp = utils.tempdir()
+        if ndk:
+            libname = "model.so"
+        else:
+            libname = "model.tar"    
         libpath = temp.relpath(libname)
-        lib.export_library(libpath, ndk.create_shared)
+            
+        if ndk:
+            lib.export_library(libpath, ndk.create_shared)
+        else:
+            lib.export_library(libpath)
+        
+        
         remote = rpc.connect_tracker(args.host, args.port).request(args.key)
         remote.upload(libpath)
         rlib = remote.load_module(libname)
@@ -88,6 +99,7 @@ if __name__ == "__main__":
             tvm.nd.array(input_tensor.cpu().numpy(), ctx)
         )
     m.set_input(**lib.get_params())
+
 
     print(m.benchmark(ctx, number=1, repeat=600))
 
