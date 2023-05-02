@@ -13,8 +13,8 @@ from model_archive import MODEL_ARCHIVE
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("")
-    parser.add_argument("--model", default="alexnet")
-    parser.add_argument("--tuning-records", default="alexnet.json")
+    parser.add_argument("--model", default="vgg16")
+    parser.add_argument("--tuning-records", default="vgg_sche.json")
     parser.add_argument("--num-threads", default=8, type=int)
     parser.add_argument("--tuner", default="autotvm",
                         choices=["autotvm", "auto_scheduler"])
@@ -87,7 +87,7 @@ if __name__ == "__main__":
         tuning_option = auto_scheduler.TuningOptions(
             num_measure_trials=15000,
             builder=builder,
-            runner=runner,
+            runner=runner, 
             measure_callbacks=[
                 auto_scheduler.RecordToFile(args.tuning_records)],
         )
